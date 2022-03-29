@@ -7,68 +7,110 @@
 #BPPARAM = MulticoreParam(6)
 
 #Read in the exon count data
-inDir = "/Users/mgriffit/Google Drive/Manuscripts/SF3B1_Kommagani/dex-seq-analysis/exon_counts"
-countFiles = list.files(inDir, pattern="exon_counts.tsv$", full.names=TRUE)
-basename(countFiles)
+inDirDiv6 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div6"
+countFilesDiv6 = list.files(inDirDiv6, pattern="exon_counts.tsv$", full.names=TRUE)
+basename(countFilesDiv6)
+inDirDiv7 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div7"
+countFilesDiv7 = list.files(inDirDiv7, pattern="exon_counts.tsv$", full.names=TRUE)
+basename(countFilesDiv7)
+inDirDiv8 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div8"
+countFilesDiv8 = list.files(inDirDiv8, pattern="exon_counts.tsv$", full.names=TRUE)
+basename(countFilesDiv8)
+
+#Read in exon annotations
 flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
 basename(flattenedFile)
 
 #Set output dir
-outDir = "/Users/mgriffit/Google Drive/Manuscripts/SF3B1_Kommagani/dex-seq-analysis/exon_counts/results/"
+outDir = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/"
 setwd(outDir)
 
 #Prepare a sample table
-sampleTable = data.frame(
-  row.names = c( "control_rep1", "control_rep2", "control_rep3", 
-                 "sf3b1_rep1", "sf3b1_rep2", "sf3b1_rep3" ),
-  condition = c("control", "control", "control",  
-                "sf3b1", "sf3b1", "sf3b1" ),
+sampleTableDiv6 = data.frame(
+  row.names = c("div6_cd_1.exon_counts.tsv", "div6_cd_2.exon_counts.tsv", "div6_cd_3.exon_counts.tsv", 
+                "div6_wt_1.exon_counts.tsv", "div6_wt_2.exon_counts.tsv", "div6_wt_3.exon_counts.tsv"),
+  condition = c("div6_cd", "div6_cd", "div6_cd",  
+                "div6_wt", "div6_wt", "div6_wt"),
   libType = c( "paired-end", "paired-end", "paired-end", 
-               "paired-end", "paired-end", "paired-end" ) )
+               "paired-end", "paired-end", "paired-end") )
+sampleTableDiv6
+
+sampleTableDiv7 = data.frame(
+  row.names = c("div7_cd_1.exon_counts.tsv", "div7_cd_2.exon_counts.tsv", "div7_cd_3.exon_counts.tsv",
+                "div7_wt_1.exon_counts.tsv", "div7_wt_2.exon_counts.tsv", "div7_wt_3.exon_counts.tsv"),
+  condition = c("div7_cd", "div7_cd", "div7_cd",  
+                "div7_wt", "div7_wt", "div7_wt"),
+  libType = c( "paired-end", "paired-end", "paired-end",
+               "paired-end", "paired-end", "paired-end") )
+sampleTableDiv7
+
+sampleTableDiv8 = data.frame(
+  row.names = c("div8_cd_1.exon_counts.tsv", "div8_cd_2.exon_counts.tsv", "div8_cd_3.exon_counts.tsv",
+                "div8_wt_1.exon_counts.tsv", "div8_wt_2.exon_counts.tsv", "div8_wt_3.exon_counts.tsv"),
+  condition = c("div8_cd", "div8_cd", "div8_cd",  
+                "div8_wt", "div8_wt", "div8_wt"),
+  libType = c( "paired-end", "paired-end", "paired-end",
+               "paired-end", "paired-end", "paired-end") )
+sampleTableDiv8
 
 library( "DEXSeq" )
 
-dxd = DEXSeqDataSetFromHTSeq( countFiles, sampleData=sampleTable, 
-                              design= ~ sample + exon + condition:exon,
-                              flattenedfile=flattenedFile )
 
-#Inspect the example data
-colData(dxd)
-head( counts(dxd), 5 )
+#CREATE A FUNCTION THAT PROCESSES A PAIR THROUGH DEXSEQ
+runDEXseq = function(countFiles, sampleTable, flattenedFile){
+  dxd = DEXSeqDataSetFromHTSeq( countFiles, sampleData=sampleTable, 
+                                design= ~ sample + exon + condition:exon,
+                                flattenedfile=flattenedFile )
 
-#Note that the number of columns is 12, the first six (we have six samples) 
-# corresponding to the number of reads mapping to out exonic regions and the 
-# last six correspond to the sum of the counts mapping to the rest of the 
-# exons from the same gene on each sample.
-split( seq_len(ncol(dxd)), colData(dxd)$exon )
-head( featureCounts(dxd), 5 )
-head( rowRanges(dxd), 3 )
-sampleAnnotation( dxd )
+  #Inspect the example data
+  colData(dxd)
+  head( counts(dxd), 5 )
 
-#Perform normalization
-dxd = estimateSizeFactors( dxd )
+  #Note that the number of columns is 12, the first six (we have six samples) 
+  # corresponding to the number of reads mapping to out exonic regions and the 
+  # last six correspond to the sum of the counts mapping to the rest of the 
+  # exons from the same gene on each sample.
+  split( seq_len(ncol(dxd)), colData(dxd)$exon )
+  head( featureCounts(dxd), 5 )
+  head( rowRanges(dxd), 3 )
+  sampleAnnotation( dxd )
 
-#Perform dispersion estimation
-dxd = estimateDispersions( dxd )
-#dxd = estimateDispersions( dxd, BPPARAM=BPPARAM )
+  #Perform normalization
+  dxd = estimateSizeFactors( dxd )
+
+  #Perform dispersion estimation
+  dxd = estimateDispersions( dxd )
+  #dxd = estimateDispersions( dxd, BPPARAM=BPPARAM )
  
-#As a shrinkage diagnostic, the DEXSeqDataSet use the method plotDispEsts() 
-# that plots the per-exon dispersion estimates versus the mean normalised count,
-# the resulting fitted values and the a posteriori (shrinked) dispersion 
-# estimates (Figure 1). 
-plotDispEsts( dxd )
+  #As a shrinkage diagnostic, the DEXSeqDataSet use the method plotDispEsts() 
+  # that plots the per-exon dispersion estimates versus the mean normalised count,
+  # the resulting fitted values and the a posteriori (shrinked) dispersion 
+  # estimates (Figure 1). 
+  plotDispEsts( dxd )
 
-#Test for differential expression 
-#dxd = testForDEU( dxd, BPPARAM=BPPARAM )
-dxd = testForDEU( dxd )
+  #Test for differential expression 
+  #dxd = testForDEU( dxd, BPPARAM=BPPARAM )
+  dxd = testForDEU( dxd )
 
-#Get fold change values for differential exon usage
-dxd = estimateExonFoldChanges( dxd, fitExpToVar="condition")
-#dxd = estimateExonFoldChanges(dxd, fitExpToVar="condition", BPPARAM=BPPARAM)
+  #Get fold change values for differential exon usage
+  dxd = estimateExonFoldChanges( dxd, fitExpToVar="condition")
+  #dxd = estimateExonFoldChanges(dxd, fitExpToVar="condition", BPPARAM=BPPARAM)
 
-#Get the final results
-dxr1 = DEXSeqResults( dxd )
-dxr1
+  #Get the final results
+  dxr = DEXSeqResults( dxd )
+  
+  return(dxr)
+}
+
+dxr_div6 = runDEXseq(countFilesDiv6, sampleTableDiv6, flattenedFile)
+dxr_div7 = runDEXseq(countFilesDiv7, sampleTableDiv7, flattenedFile)
+dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
+
+
+
+
+
+
 
 #Show column descriptions
 mcols(dxr1)$description
