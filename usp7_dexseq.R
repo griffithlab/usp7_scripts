@@ -18,6 +18,7 @@ countFilesDiv8 = list.files(inDirDiv8, pattern="exon_counts.tsv$", full.names=TR
 basename(countFilesDiv8)
 
 #Read in exon annotations
+inDir = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/"
 flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
 basename(flattenedFile)
 
@@ -103,7 +104,9 @@ runDEXseq = function(countFiles, sampleTable, flattenedFile){
 }
 
 dxr_div6 = runDEXseq(countFilesDiv6, sampleTableDiv6, flattenedFile)
+
 dxr_div7 = runDEXseq(countFilesDiv7, sampleTableDiv7, flattenedFile)
+
 dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
 
 
@@ -113,13 +116,13 @@ dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
 
 
 #Show column descriptions
-mcols(dxr1)$description
+mcols(dxr_div6)$description
 
 #How many exonic regions are significant with a false discovery rate of 10%:
-table ( dxr1$padj < 0.1 )  #61583
+table ( dxr_div6$padj < 0.1 )  #61583
 
 #We may also ask how many genes are affected:
-table ( tapply( dxr1$padj < 0.1, dxr1$groupID, any ) ) #10766
+table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #10766
 
 #To see how the power to detect differential exon usage depends on the number 
 # of reads that map to an exon, a so-called MA plot is useful, which plots the 
@@ -127,32 +130,33 @@ table ( tapply( dxr1$padj < 0.1, dxr1$groupID, any ) ) #10766
 # by red color the exons which are considered significant; here, the exons with 
 # an adjusted p values of less than 0.1 (There is of course nothing special 
 # about the number 0.1, and you can specify other thresholds in the call to plotMA().
-plotMA( dxr1, cex=0.8 )
+plotMA( dxr_div6, cex=0.8 )
 
 #Pull some examples with strong pvalues and fold changes
-x = dxr1[(which (dxr1$padj < 0.001 & abs(dxr1$log2fold_sf3b1_control) > 5)),]
+x = dxr_div6[(which (dxr_div6$padj < 0.001 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 3)),]
 
 #Try some visualizations
-plotDEXSeq( dxr1, "ENSG00000073711", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr1, "ENSG00000132915", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000001576", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000020922", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000030602", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 #Different visualization options ...
 
 #Show transcripts
-plotDEXSeq( dxr1, "ENSG00000073711", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 #Show counts from individual samples
-plotDEXSeq( dxr1, "ENSG00000073711", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 # DEXSeq is designed to find changes in relative exon usage, i.e., changes in 
 # the expression of individual exons that are not simply the consequence of 
 # overall up- or down-regulation of the gene. To visualize such changes, it is 
 # sometimes advantageous to remove overall changes in expression from the plots. 
 # Use the option splicing=TRUE for this purpose.
-plotDEXSeq( dxr1, "ENSG00000073711", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 #Combine the options above
-plotDEXSeq( dxr1, "ENSG00000073711", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
             legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 #Create plots for the top X by p-value
@@ -164,10 +168,10 @@ plotDEXSeq( dxr1, "ENSG00000073711", displayTranscripts=TRUE, expression=FALSE, 
 #Create a volcano plot
 
 
-#Create a heatmap using exon values from a subset of genes (e.g. known targets for SF3B1 splicing)
-outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/SF3B1_Kommagani/dex-seq-analysis/exon_counts/results/auto/"
+#Create a heatmap using exon values from a subset of genes
+outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/"
 setwd(outDir2)
-x = dxr1[(which (dxr1$padj < 0.001 & abs(dxr1$log2fold_sf3b1_control) > 2)),]
+x = dxr_div6[(which (dxr_div6$padj < 0.001 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
 o = order(x$padj)
 y = x[o[1:1000],]
 z = unique(y$groupID)[1:100]
@@ -175,23 +179,23 @@ for (i in 1:100){
   gene = z[i]
   name = paste(gene, ".pdf", sep="")
   pdf(file=name)
-  plotDEXSeq( dxr1, gene, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+  plotDEXSeq( dxr_div6, gene, expression=FALSE, norCounts=TRUE, splicing=TRUE,
               legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
   dev.off()
 }
 setwd(outDir)
 
 #Write out the significant results
-filtered_data = dxr1[(which (dxr1$padj < 0.01 & abs(dxr1$log2fold_sf3b1_control) > 2)),]
+filtered_data = dxr_div6[(which (dxr_div6$padj < 0.01 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
 dim(filtered_data)
 length(unique(filtered_data[,1]))
 
 library("xlsx")
-write.xlsx(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_SF3B1vsControl.xlsx", sheetName = "Sheet1",col.names = TRUE, row.names = FALSE, append = FALSE)
-write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_SF3B1vsControl.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+write.xlsx(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div6.xlsx", sheetName = "Sheet1",col.names = TRUE, row.names = FALSE, append = FALSE)
+write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div6.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 
 #Create a web report
-outDir3 = "/Users/mgriffit/Google Drive/Manuscripts/SF3B1_Kommagani/dex-seq-analysis/exon_counts/results/html/"
+outDir3 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/html/"
 setwd(outDir3)
-DEXSeqHTML( dxr1, FDR=0.01, color=c("#FF000080", "#0000FF80") )
+DEXSeqHTML( dxr_div6, FDR=0.01, color=c("#FF000080", "#0000FF80") )
 setwd(outDir)
