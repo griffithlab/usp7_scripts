@@ -104,25 +104,23 @@ runDEXseq = function(countFiles, sampleTable, flattenedFile){
 }
 
 dxr_div6 = runDEXseq(countFilesDiv6, sampleTableDiv6, flattenedFile)
-
 dxr_div7 = runDEXseq(countFilesDiv7, sampleTableDiv7, flattenedFile)
-
 dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
-
-
-
-
-
-
 
 #Show column descriptions
 mcols(dxr_div6)$description
+mcols(dxr_div7)$description
+mcols(dxr_div8)$description
 
 #How many exonic regions are significant with a false discovery rate of 10%:
-table ( dxr_div6$padj < 0.1 )  #61583
+table ( dxr_div6$padj < 0.1 )  #54
+table ( dxr_div7$padj < 0.1 )  #13
+table ( dxr_div8$padj < 0.1 )  #34
 
 #We may also ask how many genes are affected:
-table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #10766
+table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #48
+table ( tapply( dxr_div7$padj < 0.1, dxr_div7$groupID, any ) ) #12
+table ( tapply( dxr_div8$padj < 0.1, dxr_div8$groupID, any ) ) #33
 
 #To see how the power to detect differential exon usage depends on the number 
 # of reads that map to an exon, a so-called MA plot is useful, which plots the 
@@ -131,33 +129,76 @@ table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #10766
 # an adjusted p values of less than 0.1 (There is of course nothing special 
 # about the number 0.1, and you can specify other thresholds in the call to plotMA().
 plotMA( dxr_div6, cex=0.8 )
+plotMA( dxr_div7, cex=0.8 )
+plotMA( dxr_div8, cex=0.8 )
 
 #Pull some examples with strong pvalues and fold changes
-x = dxr_div6[(which (dxr_div6$padj < 0.001 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 3)),]
+examples_div6 = dxr_div6[(which (dxr_div6$padj < 0.01 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
+examples_div7 = dxr_div7[(which (dxr_div7$padj < 0.1 & abs(dxr_div7$log2fold_div7_wt_div7_cd) > 1.5)),]
+examples_div8 = dxr_div8[(which (dxr_div8$padj < 0.1 & abs(dxr_div8$log2fold_div8_wt_div8_cd) > 2)),]
 
 #Try some visualizations
 plotDEXSeq( dxr_div6, "ENSMUSG00000001576", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 plotDEXSeq( dxr_div6, "ENSMUSG00000020922", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 plotDEXSeq( dxr_div6, "ENSMUSG00000030602", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000028655", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000026924", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000027883", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000029994", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000036053", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000087001", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
 
 #Different visualization options ...
 
 #Show transcripts
+plotDEXSeq( dxr_div6, "ENSMUSG00000001576", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000030602", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000028655", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000026924", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000027883", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000029994", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000036053", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000087001", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 #Show counts from individual samples
+plotDEXSeq( dxr_div6, "ENSMUSG00000001576", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000030602", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
 # DEXSeq is designed to find changes in relative exon usage, i.e., changes in 
 # the expression of individual exons that are not simply the consequence of 
 # overall up- or down-regulation of the gene. To visualize such changes, it is 
 # sometimes advantageous to remove overall changes in expression from the plots. 
 # Use the option splicing=TRUE for this purpose.
+plotDEXSeq( dxr_div6, "ENSMUSG00000001576", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div6, "ENSMUSG00000030602", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
 
 #Combine the options above
+plotDEXSeq( dxr_div6, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+
 plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
             legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+plotDEXSeq( dxr_div7, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+plotDEXSeq( dxr_div8, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+plotDEXSeq( dxr_div6, "ENSMUSG00000030602", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+
 
 #Create plots for the top X by p-value
 
@@ -168,14 +209,16 @@ plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=
 #Create a volcano plot
 
 
-#Create a heatmap using exon values from a subset of genes
+#Create visualizations for all genes passing a threshold
 outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/"
 setwd(outDir2)
-x = dxr_div6[(which (dxr_div6$padj < 0.001 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
+x = dxr_div6[(which (dxr_div6$padj < 0.1 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 1.5)),]
+c = length(x[,1])
 o = order(x$padj)
-y = x[o[1:1000],]
-z = unique(y$groupID)[1:100]
-for (i in 1:100){
+y = x[o[1:c],]
+z = unique(y$groupID)
+c1 = length(z)
+for (i in 1:c1){
   gene = z[i]
   name = paste(gene, ".pdf", sep="")
   pdf(file=name)
@@ -184,6 +227,44 @@ for (i in 1:100){
   dev.off()
 }
 setwd(outDir)
+
+outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div7/"
+setwd(outDir2)
+x = dxr_div7[(which (dxr_div7$padj < 0.1 & abs(dxr_div7$log2fold_div7_wt_div7_cd) > 1.5)),]
+c = length(x[,1])
+o = order(x$padj)
+y = x[o[1:c],]
+z = unique(y$groupID)
+c1 = length(z)
+for (i in 1:c1){
+  gene = z[i]
+  name = paste(gene, ".pdf", sep="")
+  pdf(file=name)
+  plotDEXSeq( dxr_div7, gene, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+              legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+  dev.off()
+}
+setwd(outDir)
+
+outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div8/"
+setwd(outDir2)
+x = dxr_div8[(which (dxr_div8$padj < 0.1 & abs(dxr_div8$log2fold_div8_wt_div8_cd) > 1.5)),]
+c = length(x[,1])
+o = order(x$padj)
+y = x[o[1:c],]
+z = unique(y$groupID)
+c1 = length(z)
+for (i in 1:c1){
+  gene = z[i]
+  name = paste(gene, ".pdf", sep="")
+  pdf(file=name)
+  plotDEXSeq( dxr_div8, gene, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+              legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+  dev.off()
+}
+setwd(outDir)
+
+
 
 #Write out the significant results
 filtered_data = dxr_div6[(which (dxr_div6$padj < 0.01 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
