@@ -2,17 +2,21 @@
 #"R76" of Ensembl implies use of REF GENOME: GRCm38.p2 
 #For this reason, the most recent Ensembl annotations (without producing new BAMs) that can be used are: Ensembl 102: Nov 2020 (GRCm38.p6)
 
+export BASEDIR=/storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis 
+export OUTDIR=$BASEDIR/exon_counts/not_aggregated
+export BAMDIR=/storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_USP7_culture_RNAseq/files/pd6ZzJdl/Kim_s5703_MGI2530
+
 #1. Create a GFF file for use with DEXSeq
-cd /storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/refs
+cd $BASEDIR/refs
 wget http://ftp.ensembl.org/pub/release-102/gtf/mus_musculus/Mus_musculus.GRCm38.102.gtf.gz
 gunzip Mus_musculus.GRCm38.102.gtf.gz
 
 isub -m 10 -i 'docker(malachig/htseq-0.12.4)'
-python /usr/local/DEXSeq/dexseq_prepare_annotation.py --aggregate no /storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/refs/Mus_musculus.GRCm38.102.gtf /storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/exon_counts/not_aggregated/Mus_musculus.GRCm38.102.gff
+python /usr/local/DEXSeq/dexseq_prepare_annotation.py --aggregate no $BASEDIR/refs/Mus_musculus.GRCm38.102.gtf $BASEDIR/exon_counts/not_aggregated/Mus_musculus.GRCm38.102.gff
 exit
 
 #2. Create annotations from the GFF to help annotate the practically useless exon count file that will be produced in the next step
-cd /storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/exon_counts/not_aggregated/
+cd $BASEDIR/exon_counts/not_aggregated/
 grep -v aggregate_gene Mus_musculus.GRCm38.102.gff | perl -ne 'chomp; $gid="ZZZ"; $eid="ZZZ"; if ($_ =~ /exonic\_part\_number\s+\"(\w+)\".*gene\_id\s+\"(\w+)\"/){$eid=$1; $gid=$2;} print "$gid:$eid\t$_\n"' | sort > Mus_musculus.GRCm38.102.annotations.tsv
 
 #NOTE: Initially I was NOT understanding that the DEXseq package in R will reassociate counts with annotations using the GFF file.  So the step above is probably not needed.
@@ -23,9 +27,6 @@ grep -v aggregate_gene Mus_musculus.GRCm38.102.gff | perl -ne 'chomp; $gid="ZZZ"
 #details from the collaborator on library prep: ...
 
 #contruct exon counting commands, one for each sample BAM file
-export OUTDIR=/storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/exon_counts/not_aggregated
-export BAMDIR=/storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_USP7_culture_RNAseq/files/pd6ZzJdl/Kim_s5703_MGI2530
-
 bsub -G compute-oncology -q oncology -g /mgriffit/small -M 20000000 -R 'select[mem>20000] span[hosts=1] rusage[mem=20000]' -oo $OUTDIR/div6_cd_1.exon_counts.log -a 'docker(malachig/htseq-0.12.4)' 'python /usr/local/DEXSeq/dexseq_count.py --stranded no --paired yes --format bam --order pos $OUTDIR/Mus_musculus.GRCm38.102.gff $BAMDIR/div6_cd_1.AACTCCGATC-ATCCGTTGGC/div6_cd_1.AACTCCGATC-ATCCGTTGGC.genome_accepted_hits.bam $OUTDIR/div6_cd_1.exon_counts.tsv'
 
 bsub -G compute-oncology -q oncology -g /mgriffit/small -M 20000000 -R 'select[mem>20000] span[hosts=1] rusage[mem=20000]' -oo $OUTDIR/div6_cd_2.exon_counts.log -a 'docker(malachig/htseq-0.12.4)' 'python /usr/local/DEXSeq/dexseq_count.py --stranded no --paired yes --format bam --order pos $OUTDIR/Mus_musculus.GRCm38.102.gff $BAMDIR/div6_cd_2.GTCCGAGGAA-CTTCAGGTAA/div6_cd_2.GTCCGAGGAA-CTTCAGGTAA.genome_accepted_hits.bam $OUTDIR/div6_cd_2.exon_counts.tsv'
