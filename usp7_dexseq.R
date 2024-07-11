@@ -1,29 +1,29 @@
 #Exon counts created on compute1 as described here:
-#/storage1/fs1/alberthkim/Active/data/hao/dexseq_analysis/exon_counts/not_aggregated
-#/Volumes/alberthkim/Active/data/hao/dexseq_analysis/exon_counts/not_aggregated
+#/storage1/fs1/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/exon_counts/not_aggregated
+#/Volumes/alberthkim/Active/data/hao_usp7_project/20220120_dexseq_analysis/exon_counts/not_aggregated
 
 #Set up parallel compute
 #library("BiocParallel")
 #BPPARAM = MulticoreParam(6)
 
 #Read in the exon count data
-inDirDiv6 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div6"
+inDirDiv6 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div6"
 countFilesDiv6 = list.files(inDirDiv6, pattern="exon_counts.tsv$", full.names=TRUE)
 basename(countFilesDiv6)
-inDirDiv7 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div7"
+inDirDiv7 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div7"
 countFilesDiv7 = list.files(inDirDiv7, pattern="exon_counts.tsv$", full.names=TRUE)
 basename(countFilesDiv7)
-inDirDiv8 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div8"
+inDirDiv8 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/div8"
 countFilesDiv8 = list.files(inDirDiv8, pattern="exon_counts.tsv$", full.names=TRUE)
 basename(countFilesDiv8)
 
 #Read in exon annotations
-inDir = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/"
+inDir = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated"
 flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
 basename(flattenedFile)
 
 #Set output dir
-outDir = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/"
+outDir = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/"
 setwd(outDir)
 
 #Prepare a sample table
