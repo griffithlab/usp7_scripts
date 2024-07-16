@@ -17,6 +17,9 @@ inDirDiv8 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/ex
 countFilesDiv8 = list.files(inDirDiv8, pattern="exon_counts.tsv$", full.names=TRUE)
 basename(countFilesDiv8)
 
+#Master list of all files
+countFilesDivN = c(countFilesDiv6, countFilesDiv7, countFilesDiv8)
+
 #Read in exon annotations
 inDir = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated"
 flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
@@ -26,7 +29,7 @@ basename(flattenedFile)
 outDir = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/"
 setwd(outDir)
 
-#Prepare a sample table
+#Prepare a sample table for each batch
 sampleTableDiv6 = data.frame(
   row.names = c("div6_cd_1.exon_counts.tsv", "div6_cd_2.exon_counts.tsv", "div6_cd_3.exon_counts.tsv", 
                 "div6_wt_1.exon_counts.tsv", "div6_wt_2.exon_counts.tsv", "div6_wt_3.exon_counts.tsv"),
@@ -54,8 +57,31 @@ sampleTableDiv8 = data.frame(
                "paired-end", "paired-end", "paired-end") )
 sampleTableDiv8
 
-library( "DEXSeq" )
+#Prepare a sample table that combines all batches together
+sampleTableDivN = data.frame(
+  row.names = c("div6_cd_1.exon_counts.tsv", "div6_cd_2.exon_counts.tsv", "div6_cd_3.exon_counts.tsv", 
+                "div6_wt_1.exon_counts.tsv", "div6_wt_2.exon_counts.tsv", "div6_wt_3.exon_counts.tsv",
+                "div7_cd_1.exon_counts.tsv", "div7_cd_2.exon_counts.tsv", "div7_cd_3.exon_counts.tsv", 
+                "div7_wt_1.exon_counts.tsv", "div7_wt_2.exon_counts.tsv", "div7_wt_3.exon_counts.tsv",
+                "div8_cd_1.exon_counts.tsv", "div8_cd_2.exon_counts.tsv", "div8_cd_3.exon_counts.tsv", 
+                "div8_wt_1.exon_counts.tsv", "div8_wt_2.exon_counts.tsv", "div8_wt_3.exon_counts.tsv"),
+  condition = c("divN_cd", "divN_cd", "divN_cd",  
+                "divN_wt", "divN_wt", "divN_wt",
+                "divN_cd", "divN_cd", "divN_cd",  
+                "divN_wt", "divN_wt", "divN_wt",
+                "divN_cd", "divN_cd", "divN_cd",  
+                "divN_wt", "divN_wt", "divN_wt"),
+  libType = c( "paired-end", "paired-end", "paired-end", 
+               "paired-end", "paired-end", "paired-end",
+               "paired-end", "paired-end", "paired-end", 
+               "paired-end", "paired-end", "paired-end",
+               "paired-end", "paired-end", "paired-end", 
+               "paired-end", "paired-end", "paired-end") )
+sampleTableDivN
 
+
+library( "DEXSeq" )
+library( "openxlsx" )
 
 #CREATE A FUNCTION THAT PROCESSES A PAIR THROUGH DEXSEQ
 runDEXseq = function(countFiles, sampleTable, flattenedFile){
@@ -103,24 +129,39 @@ runDEXseq = function(countFiles, sampleTable, flattenedFile){
   return(dxr)
 }
 
-dxr_div6 = runDEXseq(countFilesDiv6, sampleTableDiv6, flattenedFile)
-dxr_div7 = runDEXseq(countFilesDiv7, sampleTableDiv7, flattenedFile)
-dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
+#dxr_div6 = runDEXseq(countFilesDiv6, sampleTableDiv6, flattenedFile)
+#saveRDS(dxr_div6, file = "dxr_div6.rds")
+dxr_div6 = readRDS(file = "dxr_div6.rds")
+
+#dxr_div7 = runDEXseq(countFilesDiv7, sampleTableDiv7, flattenedFile)
+#saveRDS(dxr_div7, file = "dxr_div7.rds")
+dxr_div7 = readRDS(file = "dxr_div7.rds")
+
+#dxr_div8 = runDEXseq(countFilesDiv8, sampleTableDiv8, flattenedFile)
+#saveRDS(dxr_div8, file = "dxr_div8.rds")
+dxr_div8 = readRDS(file = "dxr_div8.rds")
+
+#dxr_divN = runDEXseq(countFilesDivN, sampleTableDivN, flattenedFile)
+#saveRDS(dxr_divN, file = "dxr_divN.rds")
+dxr_divN = readRDS(file = "dxr_divN.rds")
 
 #Show column descriptions
 mcols(dxr_div6)$description
 mcols(dxr_div7)$description
 mcols(dxr_div8)$description
+mcols(dxr_divN)$description
 
 #How many exonic regions are significant with a false discovery rate of 10%:
-table ( dxr_div6$padj < 0.1 )  #54
-table ( dxr_div7$padj < 0.1 )  #13
-table ( dxr_div8$padj < 0.1 )  #34
+table ( dxr_div6$padj < 0.1 )  #7
+table ( dxr_div7$padj < 0.1 )  #34
+table ( dxr_div8$padj < 0.1 )  #53
+table ( dxr_divN$padj < 0.1 )  #49
 
 #We may also ask how many genes are affected:
-table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #48
-table ( tapply( dxr_div7$padj < 0.1, dxr_div7$groupID, any ) ) #12
-table ( tapply( dxr_div8$padj < 0.1, dxr_div8$groupID, any ) ) #33
+table ( tapply( dxr_div6$padj < 0.1, dxr_div6$groupID, any ) ) #3
+table ( tapply( dxr_div7$padj < 0.1, dxr_div7$groupID, any ) ) #30
+table ( tapply( dxr_div8$padj < 0.1, dxr_div8$groupID, any ) ) #41
+table ( tapply( dxr_divN$padj < 0.1, dxr_divN$groupID, any ) ) #34
 
 #To see how the power to detect differential exon usage depends on the number 
 # of reads that map to an exon, a so-called MA plot is useful, which plots the 
@@ -131,88 +172,52 @@ table ( tapply( dxr_div8$padj < 0.1, dxr_div8$groupID, any ) ) #33
 plotMA( dxr_div6, cex=0.8 )
 plotMA( dxr_div7, cex=0.8 )
 plotMA( dxr_div8, cex=0.8 )
+plotMA( dxr_divN, cex=0.8 )
 
 #Pull some examples with strong pvalues and fold changes
-examples_div6 = dxr_div6[(which (dxr_div6$padj < 0.01 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
+examples_div6 = dxr_div6[(which (dxr_div6$padj < 0.1 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 1.5)),]
 examples_div7 = dxr_div7[(which (dxr_div7$padj < 0.1 & abs(dxr_div7$log2fold_div7_wt_div7_cd) > 1.5)),]
-examples_div8 = dxr_div8[(which (dxr_div8$padj < 0.1 & abs(dxr_div8$log2fold_div8_wt_div8_cd) > 2)),]
-
-#Try some visualizations
-plotDEXSeq( dxr_div6, "ENSMUSG00000001576", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000020922", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000030602", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div7, "ENSMUSG00000028655", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000026924", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000027883", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000029994", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000036053", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000087001", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+examples_div8 = dxr_div8[(which (dxr_div8$padj < 0.1 & abs(dxr_div8$log2fold_div8_wt_div8_cd) > 1.5)),]
 
 
-#Different visualization options ...
 
-#Show transcripts
-plotDEXSeq( dxr_div6, "ENSMUSG00000001576", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000030602", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div7, "ENSMUSG00000028655", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000026924", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000027883", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000029994", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000036053", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000087001", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+#Usp7 positive control. Expected skipped junction: chr16:8706729-8708859
+#Skipped exon coordinates: chr16:8707638-8707746
+#This exon in DEXseq annotations looks like: ENSMUSG00000022710:E049, 16:8707638-8707746:-
 
-#Show counts from individual samples
-plotDEXSeq( dxr_div6, "ENSMUSG00000001576", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000030602", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+#Try some visualizations starting with Usp7 itself
+plotDEXSeq( dxr_div6, "ENSMUSG00000022710", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000022710", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000022710", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
-# DEXSeq is designed to find changes in relative exon usage, i.e., changes in 
-# the expression of individual exons that are not simply the consequence of 
-# overall up- or down-regulation of the gene. To visualize such changes, it is 
-# sometimes advantageous to remove overall changes in expression from the plots. 
-# Use the option splicing=TRUE for this purpose.
-plotDEXSeq( dxr_div6, "ENSMUSG00000001576", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000020922", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div6, "ENSMUSG00000030602", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+#Try some visualizations starting with Usp7 itself - show replicates
+plotDEXSeq( dxr_div6, "ENSMUSG00000022710", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000022710", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000022710", expression=FALSE, norCounts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
+#Try some visualizations starting with Usp7 itself - show transcripts
+plotDEXSeq( dxr_div6, "ENSMUSG00000022710", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000022710", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000022710", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 
-#Combine the options above
-plotDEXSeq( dxr_div6, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+#Try some visualizations starting with Usp7 itself - remove overall changes in expression from the plots
+plotDEXSeq( dxr_div6, "ENSMUSG00000022710", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div7, "ENSMUSG00000022710", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr_div8, "ENSMUSG00000022710", expression=FALSE, splicing=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+
+#Try some visualizations starting with Usp7 itself - Combine the options above
+plotDEXSeq( dxr_div6, "ENSMUSG00000022710", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
             legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div7, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+plotDEXSeq( dxr_div7, "ENSMUSG00000022710", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
             legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-plotDEXSeq( dxr_div8, "ENSMUSG00000001576", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
+plotDEXSeq( dxr_div8, "ENSMUSG00000022710", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
             legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-
-
-plotDEXSeq( dxr_div6, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
-            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-
-plotDEXSeq( dxr_div7, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
-            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-
-plotDEXSeq( dxr_div8, "ENSMUSG00000020922", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
-            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-
-plotDEXSeq( dxr_div6, "ENSMUSG00000030602", displayTranscripts=TRUE, expression=FALSE, norCounts=TRUE, splicing=TRUE,
-            legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
-
-
-
-#Create plots for the top X by p-value
-
-
-#Filter down to examples that meet certain criteria to find good examples?
-
-
-#Create a volcano plot
 
 
 #Create visualizations for all genes passing a threshold
-outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/"
+outDir2 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6"
 setwd(outDir2)
-x = dxr_div6[(which (dxr_div6$padj < 0.1 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 1.5)),]
+x = dxr_div6[(which (dxr_div6$padj < 0.1)),]
 c = length(x[,1])
 o = order(x$padj)
 y = x[o[1:c],]
@@ -226,11 +231,15 @@ for (i in 1:c1){
               legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
   dev.off()
 }
-setwd(outDir)
+#Write out the significant results
+filtered_data = dxr_div6[(which (dxr_div6$padj < 0.1)),]
+dim(filtered_data)
+length(unique(filtered_data[,1]))
+write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div6.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 
-outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div7/"
+outDir2 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div7"
 setwd(outDir2)
-x = dxr_div7[(which (dxr_div7$padj < 0.1 & abs(dxr_div7$log2fold_div7_wt_div7_cd) > 1.5)),]
+x = dxr_div7[(which (dxr_div7$padj < 0.1)),]
 c = length(x[,1])
 o = order(x$padj)
 y = x[o[1:c],]
@@ -244,11 +253,15 @@ for (i in 1:c1){
               legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
   dev.off()
 }
-setwd(outDir)
+#Write out the significant results
+filtered_data = dxr_div7[(which (dxr_div7$padj < 0.1)),]
+dim(filtered_data)
+length(unique(filtered_data[,1]))
+write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div7.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 
-outDir2 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div8/"
+outDir2 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div8"
 setwd(outDir2)
-x = dxr_div8[(which (dxr_div8$padj < 0.1 & abs(dxr_div8$log2fold_div8_wt_div8_cd) > 1.5)),]
+x = dxr_div8[(which (dxr_div8$padj < 0.1)),]
 c = length(x[,1])
 o = order(x$padj)
 y = x[o[1:c],]
@@ -262,21 +275,14 @@ for (i in 1:c1){
               legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
   dev.off()
 }
-setwd(outDir)
-
-
-
 #Write out the significant results
-filtered_data = dxr_div6[(which (dxr_div6$padj < 0.01 & abs(dxr_div6$log2fold_div6_wt_div6_cd) > 2)),]
+filtered_data = dxr_div8[(which (dxr_div8$padj < 0.1)),]
 dim(filtered_data)
 length(unique(filtered_data[,1]))
-
-library("xlsx")
-write.xlsx(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div6.xlsx", sheetName = "Sheet1",col.names = TRUE, row.names = FALSE, append = FALSE)
-write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div6.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+write.table(as.data.frame(filtered_data[,1:12]), file="DEXseq_Significant_Div8.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 
 #Create a web report
-outDir3 = "/Users/mgriffit/Google Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/html/"
+outDir3 = "/Users/mgriffit/Google Drive/My Drive/Manuscripts/USP7-AlbertKim/exon_counts/not_aggregated/results/div6/html/"
 setwd(outDir3)
 DEXSeqHTML( dxr_div6, FDR=0.01, color=c("#FF000080", "#0000FF80") )
 setwd(outDir)
